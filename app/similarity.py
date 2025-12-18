@@ -1,3 +1,10 @@
+"""
+Similarity-based retrieval and prompt construction.
+
+This module implements a lightweight Retrieval-Augmented Generation (RAG)
+pipeline using TF-IDF and cosine similarity.
+"""
+
 from typing import List
 from app.schemas import TranslationPair
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,8 +18,24 @@ def build_prompt(
     pairs: List[TranslationPair],
     k: int = 4
 ) -> str:
+    """
+    Build a translation prompt using retrieved examples.
 
+    The function retrieves the top-k most similar source sentences
+    and formats them as examples for an LLM.
 
+    Args:
+        query_sentence (str): Sentence to translate.
+        src_lang (str): Source language code.
+        tgt_lang (str): Target language code.
+        pairs (List[TranslationPair]): Candidate translation examples.
+        k (int): Maximum number of examples to include.
+
+    Returns:
+        str: Constructed prompt.
+    """
+
+    # Fallback when no examples are available
     if not pairs:
         return "\n".join([
             f"Translate the following sentence from {src_lang} to {tgt_lang}:",
@@ -37,7 +60,7 @@ def build_prompt(
 
     top_pairs = [p for score, p in ranked if score > 0][:k]
 
-
+    # Fallback if similarity is too low
     if not top_pairs:
         return "\n".join([
             f"Translate the following sentence from {src_lang} to {tgt_lang}:",
